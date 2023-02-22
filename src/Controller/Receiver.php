@@ -23,14 +23,37 @@ class Receiver
     $json_data = file_get_contents($api_url);
 
     // Decode JSON data into PHP array
-    $response_data = json_decode($json_data);
+    $response_data = json_decode($json_data, true);
 
-    // Transform eui to decimal
-    $response_data->gatewayEui = hexdec($response_data->gatewayEui);
+    // Transform values to decimal
+    foreach ($response_data as $key => &$value) {
+      if ($key === "gatewayEui" || substr($value, 0, 2) === "0x") {
+        $value = hexdec(substr($value, 2));
+      }
+    }
 
-    return new Response(
-      '<html><body>gatewayEui: '.$response_data->gatewayEui.'</body></html>'
-    );
+    $rooting_key = $this -> transformArray($response_data);
+
+    return $rooting_key;
+  }
+
+  public function transformArray($array) {
+    /**
+    * Transform the array the a valid rooting key
+    * e.g. 9574384526953556788.260.10.1794.1024
+    *
+    * :param url: the php array 
+    * :return: the valid rooting key
+    */
+    $gatewayEui = $array["gatewayEui"];
+    $profileId = $array["profileId"];
+    $endpointId = $array["endpointId"];
+    $clusterId = $array["clusterId"];
+    $attributeId = $array["attributeId"];
+  
+    $transformed = "{$gatewayEui}.{$profileId}.{$endpointId}.{$clusterId}.{$attributeId}";
+    return $transformed;
   }
 }
+
 ?>
