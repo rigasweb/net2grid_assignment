@@ -36,19 +36,16 @@ class Filter
       $connection->close();     
     }
          
-    public function publish_data(): Response{
+    public function publish_data($connection, 
+                                 $routingKey,
+                                 $exchange = 'cand_t4a4',
+                                 $queue = 'cand_t4a4_results'): Response{
       /**
        * Send data to an exchange on a RabbitMQ instance where they are filtered
        * :param:
        * :return:
        */   
-
-      $connection = $this -> connect();
       $channel = $connection->channel();
-      
-      $exchange = 'cand_t4a4';
-      $queue = 'cand_t4a4_results';
-      $routingKey = '9574384526953556788.260.10.1794.1024'; 
 
       //$channel->queue_declare($queue, false, true, false, false);
       //$channel->exchange_declare($exchange, 'direct', true, true, false);
@@ -61,25 +58,27 @@ class Filter
       $channel->basic_publish($message, $exchange, $routingKey);
       $channel->close();
 
-      $sth = $this -> consume_data($connection);
+      $message = $this -> consume_data($connection);
       $this->close_connection($connection);
 
-      return new Response(
-        '<html><body>gatewayEui: </body></html>'
-      );
+      return $message;
+      //return new Response(
+      //  '<html><body>gatewayEui:'.$message.' </body></html>'
+      //);
       }
     
-    public function consume_data($connection): Response{
+    public function consume_data($connection) {
       /**
        * Consume data from the RabbitMQ queue
        * :param connection: the RabbitMQ connection
        * :return:
        */  
-      
-      $channel = $connection->channel();
-
       $queue = 'cand_t4a4_results';
       $consumerTag = 'my_consumer';
+      $exchange = 'cand_t4a4';
+
+      $channel = $connection->channel();
+      $channel->queue_bind($queue, $exchange);
 
       $channel->basic_qos(null, 1, null);
       $channel->basic_consume($queue, $consumerTag, false, false, false, false, function($message) {
@@ -92,13 +91,15 @@ class Filter
 
       try {
         while (count($channel->callbacks)) {
-            $channel->wait(null, true, 3);
+            $channel->wait(null, true, 5);
         }} 
       catch (Exception $e) {
         echo "End of messages: " . $e->getMessage() . "\n";
       }
 
       $channel->close();
+      
+      return $message->body;
     }
 }
 

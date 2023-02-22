@@ -10,7 +10,7 @@ class Receiver
    * This class retrieves data from the API endpoint
    */
   
-  public function get_data(): Response{
+  public function get_data(){
     /**
     * Get the data from the API url
     *
