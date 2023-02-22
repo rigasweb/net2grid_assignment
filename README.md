@@ -20,7 +20,7 @@ To start the server run the following command
 - `symfony server:start`
 
 
-The Controller/Receiver.php is responsible for communicating with the API and retrieving that data.It returns the rooting key in decimal representation: <gateway eui>.<profile>.<endpoint>.<cluster>.<attribute>.
+The Controller/Receiver.php is responsible for communicating with the API and retrieving that data.It returns the rooting key in decimal representation.
 
 The Controller/Filter.php filters the data by connecting to a RabbitMQ instance. First it publishes the data and the it consumes them from a queue.
 
